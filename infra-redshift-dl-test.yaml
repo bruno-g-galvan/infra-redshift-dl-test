@@ -13,6 +13,24 @@ Parameters:
 
 Mappings:
   DatalakeStorageMap:
+    S3Prefix:
+      # RAW
+      IndustrialKepwareOpcParquet: "data/parquet/industrial/industrial_kepware_opc/"
+      IndustrialKepwareOpcJson: "data/json/industrial/industrial_kepware_opc/"
+
+      IndustrialFetteRealtimeDataJson: "data/json/industrial/industrial_fette_realtime/"
+      IndustrialUhlmannRealtimeDataJson: "data/json/industrial/industrial_uhlmann_realtime/"
+
+      IndustrialFetteAnomalyScoringPocParquet: "data/parquet/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialFetteAnomalyScoringPocJson: "data/json/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocParquet: "data/parquet/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocJson: "data/json/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+
+      CDDAChEParquet: "data/parquet/cdd/ache/"
+      SFParquetTables: "data/parquet/sf/"
+      # CLEAN
+      IndustrialFetteBatchDataHistory: "data/parquet/industrial/industrial_fette_batch_history/"
+      IndustrialUhlmannBatchDataHistory: "data/parquet/industrial/industrial_uhlmann_batch_history/"
     S3ErrorPrefix:
       IndustrialKepwareOpcParquet: "kfh_error/parquet/industrial/industrial_kepware_opc/"
       IndustrialKepwareOpcJson: "kfh_error/json/industrial/industrial_kepware_opc/"
@@ -62,7 +80,7 @@ Mappings:
       IndustrialUhlmannRealtimeData: "industrial_uhlmann_realtime"
       IndustrialFetteAnomalyScoringPoc: "industrial_fette_anomaly_scoring_poc"
       IndustrialUhlmannAnomalyScoringPoc: "industrial_uhlmann_anomaly_scoring_poc"
-      MDARequests: "mda_requests"
+      CDDAChE: "cdd_ache"
       SFTablesPrefix: "sf"
       # CLEAN
       IndustrialFetteBatchDataHistory: "industrial_fette_batch_history"
@@ -128,6 +146,32 @@ Resources:
             ExpiredObjectDeleteMarker: True
             NoncurrentVersionExpiration:
               NoncurrentDays: 1
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
+  ArtifactsBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-artifacts-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Prefix: /
+            Status: Enabled
+            ExpiredObjectDeleteMarker: True
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
       Tags:
         - Key: "datalake"
           Value: !Ref ProjectName
@@ -210,3 +254,34 @@ Resources:
           - "${ProjectName}-${Suffix}"
           - Suffix: !FindInMap [DatalakeCatalogMap, GlueDatabaseSuffix, Clean]
       CatalogId: !Ref "AWS::AccountId"
+
+  GlueJobCDDAChELanding2Raw:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: !Sub "${ProjectName}-cdd-ache-landing-to-raw-job"
+      Role: !Ref GlueServiceRoleForMDAIngestAPI
+      Command:
+        Name: glueetl
+        ScriptLocation: !Sub "s3://${ArtifactsBucket}/scripts/cdd-ache-landing-to-raw-job.py"
+        PythonVersion: 3
+      DefaultArguments:
+        --TempDir: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-to-raw-job/"
+        --spark-event-logs-path: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-to-raw-job/sparkHistoryLogs/"
+        --job-language: python
+        --job-bookmark-option: job-bookmark-disable
+        --enable-metrics: true
+        --enable-continuous-cloudwatch-log: true
+        --enable-spark-ui: true
+        --enable-glue-datacatalog: ""
+        --S3_RAW_BUCKET_NAME: !Ref RawDataBucket
+        --S3_TARGET_PREFIX:
+          !FindInMap [DatalakeStorageMap, S3Prefix, CDDAChEParquet]
+        --CATALOG_RAW_DB_NAME: !Ref RawGlueDatabase
+        --CATALOG_TARGET_TABLE_NAME:
+          !FindInMap [DatalakeCatalogMap, GlueTableName, CDDAChE]
+      ExecutionClass: FLEX
+      WorkerType: G.2X
+      NumberOfWorkers: 2
+      GlueVersion: 4.0
+      MaxRetries: 0
+      Timeout: 30
