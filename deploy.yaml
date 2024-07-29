@@ -7,4 +7,3 @@ template-file-path: "./infra-redshift-dl-test.yaml"
 # Values to set for the S3 website template.
 parameters: 
   InfrastructureName: "redshift-dl-test"
-  BucketBaseName: "${AWS::StackName}-${AWS::AccountId}-${AWS::Region}"
