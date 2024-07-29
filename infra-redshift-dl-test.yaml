@@ -1,9 +1,60 @@
 AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  ProjectName:
+    Type: "String"
+    # This gets replaced by the build script
+    Default: "redshift-dl-test-%%ENV%%"
+  DeploymentBucketName:
+    Type: "String"
+    # This gets replaced by the build script
+    Default: "redshift-dl-test-%%ENV%%-deployment-%%AWS_ACCOUNT%%-us-east-1"
+    Description: Enter the existing AWS bucket were the artifacts for deployment are uploaded.
+
 Resources:
-  MyS3Bucket:
-    Type: 'AWS::S3::Bucket'
+  RawDataBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub '${AWS::StackName}-${AWS::AccountId}-${AWS::Region}'
+      BucketName: !Sub "${ProjectName}-data-raw-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
+  CleanDataBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-data-clean-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Prefix: datalake/
+            Status: Enabled
+            ExpiredObjectDeleteMarker: True
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 1
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
 
 Outputs:
   BucketName:
