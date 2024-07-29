@@ -11,6 +11,81 @@ Parameters:
     Default: "redshift-dl-test-deployment-${AWS::AccountId}-us-east-1"
     Description: Enter the existing AWS bucket were the artifacts for deployment are uploaded.
 
+Mappings:
+  DatalakeStorageMap:
+    S3Prefix:
+      # RAW
+      IndustrialKepwareOpcParquet: "data/parquet/industrial/industrial_kepware_opc/"
+      IndustrialKepwareOpcJson: "data/json/industrial/industrial_kepware_opc/"
+
+      IndustrialFetteRealtimeDataJson: "data/json/industrial/industrial_fette_realtime/"
+      IndustrialUhlmannRealtimeDataJson: "data/json/industrial/industrial_uhlmann_realtime/"
+
+      IndustrialFetteAnomalyScoringPocParquet: "data/parquet/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialFetteAnomalyScoringPocJson: "data/json/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocParquet: "data/parquet/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocJson: "data/json/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+
+      MDARequestsParquet: "data/parquet/mda/mda_requests/"
+      SFParquetTables: "data/parquet/sf/"
+      # CLEAN
+      IndustrialFetteBatchDataHistory: "data/parquet/industrial/industrial_fette_batch_history/"
+      IndustrialUhlmannBatchDataHistory: "data/parquet/industrial/industrial_uhlmann_batch_history/"
+    S3ErrorPrefix:
+      IndustrialKepwareOpcParquet: "kfh_error/parquet/industrial/industrial_kepware_opc/"
+      IndustrialKepwareOpcJson: "kfh_error/json/industrial/industrial_kepware_opc/"
+      IndustrialFetteAnomalyScoringPocParquet: "kfh_error/parquet/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialFetteAnomalyScoringPocJson: "kfh_error/json/industrial/industrial_fette_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocParquet: "kfh_error/parquet/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+      IndustrialUhlmannAnomalyScoringPocJson: "kfh_error/json/industrial/industrial_uhlmann_anomaly_scoring_poc/"
+  DatalakeIngestMap:
+    StreamNames:
+      IndustrialKepwareOpc: "ind-kepware-opc"
+      IndustrialFetteAnomalyScoringPocInput: "ind-fette-anomaly-scoring-poc-input"
+      IndustrialUhlmannAnomalyScoringPocInput: "ind-uhlmann-anomaly-scoring-poc-input"
+    DeliveryStreamNames:
+      IndustrialKepwareOpc: "ind-kepware-opc"
+      IndustrialFetteAnomalyScoringPoc: "ind-fette-anomaly-scoring-poc-output"
+      IndustrialUhlmannAnomalyScoringPoc: "ind-uhlmann-anomaly-scoring-poc-output"
+    MetadataExtractionQuery:
+      # IndustrialKepwareOpc: "{year : .rule_timestamp[0:4]|tonumber, month : .rule_timestamp[5:7]|tonumber, day : .rule_timestamp[8:10]|tonumber}"
+      IndustrialKepwareOpc: '{ machine: .propertyAlias | split("/")[1] | ascii_downcase }'
+      IndustrialFetteAnomalyScoringPoc: "{ line: .line | ascii_downcase }"
+      IndustrialUhlmannAnomalyScoringPoc: "{ line: .line | ascii_downcase }"
+    S3PartitionPrefix:
+      IndustrialKepwareOpcParquet: "machine=!{partitionKeyFromQuery:machine}/year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/hour=!{timestamp:HH}/"
+      IndustrialKepwareOpcJson: "year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/hour=!{timestamp:HH}/"
+      IndustrialFetteAnomalyScoringPocParquet: "line=!{partitionKeyFromQuery:line}/year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/"
+      IndustrialFetteAnomalyScoringPocJson: "year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/"
+      IndustrialUhlmannAnomalyScoringPocParquet: "line=!{partitionKeyFromQuery:line}/year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/"
+      IndustrialUhlmannAnomalyScoringPocJson: "year=!{timestamp:yyyy}/month=!{timestamp:M}/day=!{timestamp:d}/"
+    BufferingSizeInMBs:
+      IndustrialKepwareOpc: 64
+      IndustrialFetteAnomalyScoringPoc: 64
+      IndustrialUhlmannAnomalyScoringPoc: 64
+    BufferingIntervalInSeconds:
+      IndustrialKepwareOpc: 300
+      IndustrialFetteAnomalyScoringPoc: 60
+      IndustrialUhlmannAnomalyScoringPoc: 60
+  DatalakeCatalogMap:
+    GlueDatabaseSuffix:
+      Raw: "raw"
+      Clean: "clean"
+      Analytics: "analytics"
+    GlueTableName:
+      # RAW
+      IndustrialKepwareOpc: "industrial_kepware_opc"
+      IndustrialFetteRealtimeData: "industrial_fette_realtime"
+      IndustrialUhlmannRealtimeData: "industrial_uhlmann_realtime"
+      IndustrialFetteAnomalyScoringPoc: "industrial_fette_anomaly_scoring_poc"
+      IndustrialUhlmannAnomalyScoringPoc: "industrial_uhlmann_anomaly_scoring_poc"
+      MDARequests: "mda_requests"
+      SFTablesPrefix: "sf"
+      # CLEAN
+      IndustrialFetteBatchDataHistory: "industrial_fette_batch_history"
+      IndustrialUhlmannBatchDataHistory: "industrial_uhlmann_batch_history"
+
+
 Resources:
   RawDataBucket:
     Type: "AWS::S3::Bucket"
@@ -55,3 +130,82 @@ Resources:
       Tags:
         - Key: "datalake"
           Value: !Ref ProjectName
+
+  AthenaResultsBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-athena-results-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldObjects
+            Prefix: athena/
+            Status: Enabled
+            ExpirationInDays: 1
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
+  GlueTempBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-glue-temp-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldObjects
+            Prefix: glue/
+            Status: Enabled
+            ExpirationInDays: 1
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
+  ArchiveBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-archive-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
+  # Glue Data Catalog Databases
+  RawGlueDatabase:
+    Type: "AWS::Glue::Database"
+    Properties:
+      DatabaseInput:
+        Name: !Sub
+          - "${ProjectName}-${Suffix}"
+          - Suffix: !FindInMap [DatalakeCatalogMap, GlueDatabaseSuffix, Raw]
+      CatalogId: !Ref "AWS::AccountId"
+
+  CleanGlueDatabase:
+    Type: "AWS::Glue::Database"
+    Properties:
+      DatabaseInput:
+        Name: !Sub
+          - "${ProjectName}-${Suffix}"
+          - Suffix: !FindInMap [DatalakeCatalogMap, GlueDatabaseSuffix, Clean]
+      CatalogId: !Ref "AWS::AccountId"
