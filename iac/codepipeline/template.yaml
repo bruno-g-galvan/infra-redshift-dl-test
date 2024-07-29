@@ -149,7 +149,7 @@ Resources:
             Provider: "CodeStarSourceConnection"
             Version: "1"
           Configuration:
-            ConnectionArn: arn:aws:codeconnections:us-east-1:316328384763:connection/1e15c686-81e5-48ad-b34c-1970ff941f2a
+            ConnectionArn: !ImportValue infra-redshift-dl-connection-stack-GitHubConnectionArn
             FullRepositoryId: !Sub "${OwnerId}/${RepositoryName}" #Need to set this.
             BranchName: !Ref BranchName
             OutputArtifactFormat: "CODE_ZIP"
