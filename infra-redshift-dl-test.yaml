@@ -51,6 +51,7 @@ Mappings:
       IndustrialUhlmannAnomalyScoringPoc: 60
   DatalakeCatalogMap:
     GlueDatabaseSuffix:
+      Landing: "landing"
       Raw: "raw"
       Clean: "clean"
       Analytics: "analytics"
@@ -69,6 +70,24 @@ Mappings:
 
 
 Resources:
+  LandingDataBucket:
+    Type: "AWS::S3::Bucket"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-data-landing-${AWS::AccountId}-${AWS::Region}"
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      VersioningConfiguration:
+        Status: Enabled
+      Tags:
+        - Key: "datalake"
+          Value: !Ref ProjectName
+
   RawDataBucket:
     Type: "AWS::S3::Bucket"
     DeletionPolicy: Retain
