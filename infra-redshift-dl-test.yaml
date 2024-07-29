@@ -259,7 +259,7 @@ Resources:
     Type: AWS::Glue::Job
     Properties:
       Name: !Sub "${ProjectName}-cdd-ache-landing-to-raw-job"
-      Role: !Ref Glue-Admin-Role
+      Role: Glue-Admin-Role
       Command:
         Name: glueetl
         ScriptLocation: !Sub "s3://${ArtifactsBucket}/scripts/cdd-ache-landing-to-raw-job.py"
