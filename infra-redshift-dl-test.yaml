@@ -259,7 +259,7 @@ Resources:
     Type: AWS::Glue::Job
     Properties:
       Name: !Sub "${ProjectName}-cdd-ache-landing-to-raw-job"
-      Role: !Ref GlueServiceRoleForMDAIngestAPI
+      Role: !Ref GlueServiceRoleForCDDAChE
       Command:
         Name: glueetl
         ScriptLocation: !Sub "s3://${ArtifactsBucket}/scripts/cdd-ache-landing-to-raw-job.py"
@@ -285,3 +285,58 @@ Resources:
       GlueVersion: 4.0
       MaxRetries: 0
       Timeout: 30
+
+  GlueServiceRoleForCDDAChE:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - glue.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      RoleName: !Sub "${ProjectName}-glue-job-cdd-ache"
+      Path: /
+      Policies:
+        - PolicyName: !Sub "${ProjectName}-glue-job-cdd-ache"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:PutObjectAcl
+                  - s3:DeleteObjectVersion
+                  - s3:GetObjectVersion
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::${ArtifactsBucket}/scripts/*"
+                  - !Sub "arn:${AWS::Partition}:s3:::${GlueTempBucket}/glue/${ProjectName}/*"
+                  - !Join
+                    - ""
+                    - - !Sub "arn:${AWS::Partition}:s3:::${RawDataBucket}/"
+                      - !FindInMap [
+                          DatalakeStorageMap,
+                          S3Prefix,
+                          CDDAChEParquet,
+                        ]
+                      - "*"
+              - Effect: "Allow"
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:ListBucketMultipartUploads
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                  - s3:GetLifecycleConfiguration
+                Resource:
+                  - !GetAtt ArtifactsBucket.Arn
+                  - !GetAtt GlueTempBucket.Arn
+                  - !GetAtt RawDataBucket.Arn
+              - Effect: "Allow"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
