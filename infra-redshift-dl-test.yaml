@@ -1,3 +1,11 @@
-template-file-path: infra-redshift-dl-test.yaml
-parameters: {}
-tags: {}
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-${AWS::AccountId}-${AWS::Region}'
+
+Outputs:
+  BucketName:
+    Value: !Ref MyS3Bucket
+    Description: The name of the S3 bucket
