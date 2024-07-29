@@ -4,11 +4,11 @@ Parameters:
   ProjectName:
     Type: "String"
     # This gets replaced by the build script
-    Default: "redshift-dl-test-%%ENV%%"
+    Default: "redshift-dl-test"
   DeploymentBucketName:
     Type: "String"
     # This gets replaced by the build script
-    Default: "redshift-dl-test-%%ENV%%-deployment-%%AWS_ACCOUNT%%-us-east-1"
+    Default: "redshift-dl-test-deployment-${AWS::AccountId}-us-east-1"
     Description: Enter the existing AWS bucket were the artifacts for deployment are uploaded.
 
 Resources:
