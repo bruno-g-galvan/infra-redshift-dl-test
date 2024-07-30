@@ -150,7 +150,7 @@ Resources:
             Version: "1"
           Configuration:
             ConnectionArn: "arn:aws:codestar-connections:us-east-1:316328384763:connection/2b09ef0f-180d-4dc3-a0ec-77f292cef7fb"
-            FullRepositoryId: !Sub "${OwnerId}/${RepositoryName}/source" #Need to set this.
+            FullRepositoryId: !Sub "${OwnerId}/${RepositoryName}" #Need to set this.
             BranchName: !Ref BranchName
             OutputArtifactFormat: "CODE_ZIP"
           OutputArtifacts:
@@ -172,6 +172,13 @@ Resources:
           - Name: "ANALYTICS_SOURCE_FILES"
           RunOrder: 1
           Region: !Ref "AWS::Region"
+      Triggers:
+        - ProviderType: CodeStarSourceConnection
+          GitConfiguration:
+            PullRequest:
+                FilePaths:
+                  Includes:
+                    - source/**
 
 Mappings:
   DatalakeStorageMap:
