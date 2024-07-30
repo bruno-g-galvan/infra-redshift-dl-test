@@ -42,7 +42,7 @@ Resources:
 Outputs:
   GitHubConnectionArn:
     Description: "The CodeStar Connection ARN."
-    Value: !GetAtt CodeStarConnection.ConnectionArn
+    Value: !Ref GitHubConnection
     Export:
       Name: !Sub "${AWS::StackName}-GitHubConnectionArn"
   GitHubRepositoryLinkArn:
