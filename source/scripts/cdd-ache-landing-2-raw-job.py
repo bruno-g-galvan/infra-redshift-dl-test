@@ -22,7 +22,7 @@ s3_client   = boto3.client('s3')
 secrets_client = boto3.client("secretsmanager")
 
 # Specify the S3 bucket and file key
-bucket_name = 'redshift-dl-test-data-landing-316328384763-us-east-1' 
+bucket_name = 'redshift-dl-test-artifacts-316328384763-us-east-1/source/data'
 file_key = 'ache_raw_data_test.csv'
 
 # Get the file object

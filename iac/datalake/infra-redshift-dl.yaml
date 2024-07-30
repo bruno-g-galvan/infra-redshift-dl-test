@@ -262,11 +262,11 @@ Resources:
       Role: Glue-Admin-Role
       Command:
         Name: glueetl
-        ScriptLocation: !Sub "s3://${ArtifactsBucket}/scripts/cdd-ache-landing-to-raw-job.py"
+        ScriptLocation: !Sub "s3://${ArtifactsBucket}/source/scripts/cdd-ache-landing-2-raw-job.py"
         PythonVersion: 3
       DefaultArguments:
-        --TempDir: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-to-raw-job/"
-        --spark-event-logs-path: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-to-raw-job/sparkHistoryLogs/"
+        --TempDir: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-2-raw-job/"
+        --spark-event-logs-path: !Sub "s3://${GlueTempBucket}/glue/${ProjectName}/cdd-ache-landing-2-raw-job/sparkHistoryLogs/"
         --job-language: python
         --job-bookmark-option: job-bookmark-disable
         --enable-metrics: true
