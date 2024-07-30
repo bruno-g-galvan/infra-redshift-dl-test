@@ -18,6 +18,7 @@ Parameters:
     Type: "String"
     Description: "The name of the GitHub repository."
     Default: "infra-redshift-dl-test"
+    
 Resources:
   GitHubConnection:
     Type: "AWS::CodeStarConnections::Connection"
@@ -38,6 +39,22 @@ Resources:
         Value: "CloudFormation"
       - Key: "StackName"
         Value: !Ref "AWS::StackName"
+Outputs:
+  GitHubConnectionArn:
+    Description: "The CodeStar Connection ARN."
+    Value: !Ref GitHubConnection
+    Export:
+      Name: !Sub "${AWS::StackName}-GitHubConnectionArn"
+  GitHubRepositoryLinkArn:
+    Description: "The GitHub Repository Link ARN."
+    Value: !Ref GitHubRepositoryLink
+    Export:
+      Name: !Sub "${AWS::StackName}-GitHubRepositoryLinkArn"
+  GitHubRepositoryLinkId:
+    Description: "The GitHub Repository Link ID."
+    Value: !GetAtt GitHubRepositoryLink.RepositoryLinkId
+    Export:
+      Name: !Sub "${AWS::StackName}-GitHubRepositoryLinkId"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
