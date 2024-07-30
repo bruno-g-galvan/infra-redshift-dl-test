@@ -130,7 +130,7 @@ Resources:
     Type: "AWS::CodePipeline::Pipeline"
     Properties:
       RoleArn: !GetAtt CodePipelineRole.Arn
-      Name: "Static"
+      Name: "Github"
       RestartExecutionOnUpdate: true
       ArtifactStores:
       - Region: !Ref "AWS::Region"
@@ -149,7 +149,7 @@ Resources:
             Provider: "CodeStarSourceConnection"
             Version: "1"
           Configuration:
-            ConnectionArn: "arn:aws:codestar-connections:us-east-1:316328384763:connection/2b09ef0f-180d-4dc3-a0ec-77f292cef7fb"
+            ConnectionArn: !ImportValue GitHubConnectionArn
             FullRepositoryId: !Sub "${OwnerId}/${RepositoryName}" #Need to set this.
             BranchName: !Ref BranchName
             OutputArtifactFormat: "CODE_ZIP"
