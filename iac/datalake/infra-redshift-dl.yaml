@@ -280,7 +280,7 @@ Resources:
         --CATALOG_TARGET_TABLE_NAME:
           !FindInMap [DatalakeCatalogMap, GlueTableName, CDDAChE]
       ExecutionClass: FLEX
-      WorkerType: G.2X
+      WorkerType: G.1X
       NumberOfWorkers: 2
       GlueVersion: 4.0
       MaxRetries: 0
