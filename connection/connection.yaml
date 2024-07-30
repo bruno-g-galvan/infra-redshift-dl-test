@@ -54,7 +54,7 @@ Outputs:
     Description: "The GitHub Repository Link ID."
     Value: !GetAtt GitHubRepositoryLink.RepositoryLinkId
     Export:
-      Name: !Sub "${AWS::StackName}-GitHubRepositoryLinkId"
+      Name: !Sub "GitHubRepositoryLinkId"
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
