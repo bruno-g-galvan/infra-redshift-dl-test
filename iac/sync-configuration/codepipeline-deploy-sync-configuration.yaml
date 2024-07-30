@@ -22,7 +22,7 @@ Resources:
     Type: "AWS::CodeStarConnections::SyncConfiguration"
     Properties:
       RepositoryLinkId: "275fdc01-3b33-48c3-b685-0eea5d3f764b" #From connection.yaml
-      RoleArn: "arn:aws:iam::316328384763:role/git-sync-role-us-east-1" #From git-sync.yaml
+      RoleArn: !ImportValue "GitSyncRoleArn" #From git-sync.yaml
       Branch: !Ref BranchName
       ConfigFile: !Ref ConfigFile
       ResourceName: !Ref ResourceName
