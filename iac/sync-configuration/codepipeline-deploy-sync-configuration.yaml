@@ -21,7 +21,7 @@ Resources:
   GitHubSyncConfiguration:
     Type: "AWS::CodeStarConnections::SyncConfiguration"
     Properties:
-      RepositoryLinkId: "275fdc01-3b33-48c3-b685-0eea5d3f764b" #From connection.yaml
+      RepositoryLinkId: !ImportValue "GitHubRepositoryLinkId" #From connection.yaml
       RoleArn: !ImportValue "GitSyncRoleArn" #From git-sync.yaml
       Branch: !Ref BranchName
       ConfigFile: !Ref ConfigFile
