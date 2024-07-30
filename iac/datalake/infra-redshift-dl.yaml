@@ -246,6 +246,15 @@ Resources:
           - Suffix: !FindInMap [DatalakeCatalogMap, GlueDatabaseSuffix, Raw]
       CatalogId: !Ref "AWS::AccountId"
 
+  CleanGlueDatabase:
+    Type: "AWS::Glue::Database"
+    Properties:
+      DatabaseInput:
+        Name: !Sub
+          - "${ProjectName}-${Suffix}"
+          - Suffix: !FindInMap [DatalakeCatalogMap, GlueDatabaseSuffix, Clean]
+      CatalogId: !Ref "AWS::AccountId"
+
   GlueJobCDDAChELanding2Raw:
     Type: AWS::Glue::Job
     Properties:
