@@ -23,7 +23,7 @@ Parameters:
     Type: "String"
     Description: "The name of the GitHub repository."
     Default: "infra-redshift-dl-test"
-  CacheControl:
+  CacheControl: 
     Type: "String"
     Description: "The Cache-Control header value applied to files coming from the build process."
     Default: "max-age=120, public"
@@ -165,7 +165,7 @@ Resources:
             Provider: "S3"
             Version: "1"
           Configuration: # Update this entire configuration session.
-            BucketName: !Sub "${ProjectName}-${BucketBaseName}-${AWS::Region}"
+            BucketName: !Sub "${ProjectName}-${BucketBaseName}-${AWS::AccountId}-${AWS::Region}"
             CacheControl: !If [ CacheControl, !Ref CacheControl, !Ref "AWS::NoValue" ]
             Extract: true
           InputArtifacts:
