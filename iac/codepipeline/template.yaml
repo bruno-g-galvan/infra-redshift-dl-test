@@ -149,7 +149,7 @@ Resources:
             Provider: "CodeStarSourceConnection"
             Version: "1"
           Configuration:
-            ConnectionArn: !ImportValue GitHubConnectionArn
+            ConnectionArn: !ImportValue GitHubConnectionArn #Check it
             FullRepositoryId: !Sub "${OwnerId}/${RepositoryName}" #Need to set this.
             BranchName: !Ref BranchName
             OutputArtifactFormat: "CODE_ZIP"
